@@ -1,192 +1,310 @@
-You are my senior Angular v21 architect. Generate production-grade Angular code using standalone APIs, zoneless change detection, and maximum practical Signals usage.
+# GitHub Copilot Instructions — Reflexa Angular Frontend
 
-==================================================
-CORE RULES
-==================================================
+This Angular app consumes the **Reflexa Node.js REST API**.
+All instructions below reflect the actual backend implementation.
 
-- Assume Angular v21, standalone components, strict TypeScript, strict templates, zoneless mode.
-- Prefer Signals everywhere possible.
-- Use: signal, computed, effect, input, output, model, linkedSignal, resource.
-- Avoid RxJS unless clearly required (HTTP streams, router events, WebSocket/BLE, debouncing, retry/cancellation).
-- When RxJS is used, convert to signals at boundaries.
-- No manual subscriptions in components unless unavoidable (then use takeUntilDestroyed).
-- Do NOT rely on Zone.js — state updates must happen through signals.
-- Use ChangeDetectionStrategy.OnPush everywhere.
-- Use modern template syntax: @if, @for, @switch, @defer (never *ngIf / *ngFor).
-- Always use track in @for.
+---
 
-==================================================
-UI LIBRARY (PRIMENG)
-==================================================
+## Backend Overview
 
-- Use PrimeNG as the default UI library.
-- Prefer PrimeNG components over custom implementations.
-- Use components such as:
-  - p-table
-  - p-button
-  - p-inputText
-  - p-dropdown
-  - p-dialog
-  - p-toast
-- Do NOT mix UI libraries.
-- Wrap complex PrimeNG components into reusable shared components.
-- Keep UI logic separate from business logic.
-- Use PrimeNG properly with signals (no template hacks or uncontrolled state).
+- **Base URL:** `http://localhost:3000/api`
+- **Auth:** JWT Bearer — `Authorization: Bearer <accessToken>`
+- **Access token lifetime:** 15 minutes. Refresh before expiry using `POST /auth/refresh-token`.
+- **All responses** follow a consistent envelope (see Response Shape).
 
-==================================================
-FORMS (SIGNAL FORMS FIRST)
-==================================================
+### Response Shape
 
-- Prefer Signal-based forms over Reactive Forms.
-- Use model() and signals for form state.
-- Use computed() for validation and derived values.
-- Use effect() for side effects (submit, autosave, sync).
-- Avoid FormGroup / FormControl unless absolutely necessary.
+```typescript
+// Success
+{ success: true; data: T }
 
-Example:
+// Success with message
+{ success: true; message: string; data: T }
 
-const email = model('');
-const password = model('');
+// Error
+{ success: false; message: string }
 
-const isValid = computed(() =>
-email().includes('@') && password().length >= 8
-);
+// Validation error (400)
+{ success: false; message: "Validation failed"; errors: Record<string, string[]> }
+```
 
-- Form state must be strongly typed.
-- Validation must be explicit and signal-driven.
-- Integrate PrimeNG inputs with signal-based forms cleanly.
+---
 
-==================================================
-ARCHITECTURE
-==================================================
+## Angular Architecture Conventions
 
-Structure:
+### HTTP Services — one service per API module
+Create a service per backend module (`AuthService`, `OrganizationsService`, `DevicesService`, etc.).
+Each service wraps `HttpClient` and maps the `data` field out of the envelope:
 
-src/app/
-├── core/        (singletons, api, interceptors)
-├── shared/      (reusable UI components)
-├── features/    (domain features)
-├── state/       (only if needed)
+```typescript
+listOrganizations(): Observable<OrganizationSummary[]> {
+  return this.http.get<ApiResponse<{ organizations: OrganizationSummary[] }>>('/organizations')
+    .pipe(map(r => r.data.organizations));
+}
+```
 
-Rules:
+### Auth Interceptor — attach token + handle 401
+Use an `HttpInterceptor` to:
+1. Attach `Authorization: Bearer <accessToken>` from in-memory storage.
+2. On `401`, call `POST /auth/refresh-token` once, update stored tokens, retry original request.
+3. If refresh also fails → redirect to `/login` and clear all tokens.
 
-- Components = UI only.
-- No API calls inside components.
-- Business logic lives in services or signal stores.
-- Prefer small feature-level signal stores instead of global state.
-- No cross-feature imports.
-- Never use any.
-- Always use strict DTOs.
+### Token Storage — never `localStorage`
+| Token | Storage |
+|---|---|
+| `accessToken` | In-memory (Angular service / signal) |
+| `refreshToken` | `HttpOnly` cookie (preferred) or in-memory |
 
-==================================================
-API & BACKEND ALIGNMENT
-==================================================
+> Never store tokens in `localStorage` — XSS risk.
 
-Backend response shape:
+### Proactive Refresh
+Decode the access token JWT client-side (read the `exp` field) and schedule a refresh ~60 seconds before expiry. No server call needed to read the payload.
 
-{
-success: boolean;
-data?: T;
-message?: string;
-errors?: Record<string, string[]>;
+---
+
+## Shared TypeScript Interfaces
+
+Copy these interfaces into `src/app/core/models/` (or similar):
+
+```typescript
+interface ApiResponse<T> { success: boolean; data: T; message?: string; }
+
+interface SafeUser {
+  id: string; email: string; emailVerified: boolean;
+  firstName: string | null; lastName: string | null;
+  displayName: string | null; avatarUrl: string | null;
+  isSuperAdmin: boolean; createdAt: string;
 }
 
-Rules:
+interface TokenPair { accessToken: string; refreshToken: string; }
 
-- Always unwrap API response in API/data layer.
-- Components must NEVER handle raw API envelopes.
-- Use typed interfaces matching backend exactly.
+interface OrganizationSummary {
+  id: string; name: string; slug: string;
+  description: string | null; isActive: boolean; createdAt: string;
+}
 
-==================================================
-HTTP & AUTH
-==================================================
+interface MemberWithRoles {
+  membershipId: string; userId: string; email: string;
+  firstName: string | null; lastName: string | null;
+  displayName: string | null; status: string;
+  joinedAt: string; roles: string[];
+}
 
-- Use HttpClient only inside API services.
-- Use interceptors for:
-  - auth token attachment
-  - token refresh
-  - global error handling
-- Components must not know token logic.
-- Never store tokens in localStorage.
+interface DeviceKitSummary {
+  id: string; organizationId: string; name: string; code: string;
+  description: string | null; ownerUserId: string | null;
+  maxPods: number; createdAt: string;
+}
 
-==================================================
-STATE MANAGEMENT
-==================================================
+interface DeviceKitDetail extends DeviceKitSummary { hub: HubSummary | null; podCount: number; }
 
-- Use Signals for state by default.
-- Prefer signal-based stores/services.
-- Use NgRx ONLY if absolutely necessary for complex global state.
+interface HubSummary {
+  id: string; hardwareUid: string; serialNumber: string | null;
+  firmwareVersion: string | null; bluetoothName: string | null;
+  isActive: boolean; lastSeenAt: string | null;
+}
 
-==================================================
-RXJS RULES
-==================================================
+interface PodSummary {
+  id: string; hardwareUid: string; serialNumber: string | null;
+  firmwareVersion: string | null; currentDeviceKitId: string | null;
+  displayName: string | null; logicalIndex: number | null;
+  batteryPercent: number | null; batteryLevel: 'HIGH'|'MEDIUM'|'LOW'|null;
+  isActive: boolean; lastSeenAt: string | null;
+}
 
-- Avoid RxJS in components.
-- No nested subscriptions.
-- No side-effects in components.
-- Convert Observables → Signals at boundaries.
+interface KitAccessGrant {
+  id: string; deviceKitId: string; userId: string;
+  canOperate: boolean; canManage: boolean;
+  grantedByUserId: string | null; createdAt: string;
+}
 
-==================================================
-COMPONENT DESIGN
-==================================================
+interface SessionSummary {
+  id: string; organizationId: string; deviceKitId: string;
+  hubDeviceId: string | null; startedByUserId: string | null;
+  assignedToUserId: string | null; assignedByUserId: string | null;
+  teamId: string | null; origin: string; syncStatus: string;
+  clientSessionId: string | null; status: string; endMode: string;
+  presetId: string | null; trainingMode: string;
+  sessionStartedAt: string; sessionEndedAt: string; durationMs: number;
+  score: number | null; hitCount: number; missCount: number;
+  accuracyPercent: number | null; avgReactionMs: number | null;
+  bestReactionMs: number | null; worstReactionMs: number | null;
+  activePodCount: number; totalEventsCount: number;
+  notes: string | null; createdAt: string; updatedAt: string;
+}
 
-- Separate smart vs dumb components.
-- Smart = data + state
-- Dumb = UI only
-- Use async pipe or signals — not manual subscribe.
+interface SessionDetail extends SessionSummary {
+  configJson: Record<string, unknown>;
+  activePods: { id: string; podDeviceId: string; podOrder: number | null; }[];
+  events: {
+    id: string; podDeviceId: string | null; eventIndex: number;
+    eventType: string; eventTimestamp: string; elapsedMs: number | null;
+    reactionTimeMs: number | null; isCorrect: boolean | null;
+    payloadJson: Record<string, unknown> | null;
+  }[];
+}
 
-==================================================
-PERFORMANCE
-==================================================
+interface PresetSummary {
+  id: string; organizationId: string | null; createdByUserId: string;
+  scope: 'USER' | 'ORGANIZATION'; name: string;
+  description: string | null; createdAt: string; updatedAt: string;
+}
 
-- OnPush everywhere
-- Use track in loops
-- Avoid unnecessary recomputation
-- Prefer computed signals over template logic
+interface PresetDetail extends PresetSummary { configJson: Record<string, unknown>; }
 
-==================================================
-CODE STYLE
-==================================================
+interface TeamSummary {
+  id: string; organizationId: string; name: string;
+  description: string | null; createdAt: string; updatedAt: string;
+}
 
-- Use inject() instead of constructor DI.
-- Keep files small and explicit.
-- Always return typed values.
-- No placeholders, no TODOs, no fake logic.
-- Code must be production-ready.
+interface TeamDetail extends TeamSummary { memberCount: number; }
 
-==================================================
-WHAT NOT TO GENERATE
-==================================================
+interface TeamMemberSummary {
+  id: string; teamId: string; userId: string; email: string;
+  firstName: string | null; lastName: string | null;
+  displayName: string | null; joinedAt: string;
+}
 
-❌ RxJS-heavy UI logic  
-❌ FormGroup-heavy forms (unless necessary)  
-❌ Business logic inside components  
-❌ Direct HttpClient usage in components  
-❌ Untyped responses  
-❌ Multiple UI libraries  
-❌ Zone.js-dependent patterns
+interface ViewerScopeSummary {
+  id: string; organizationId: string; viewerUserId: string;
+  targetUserId: string; grantedByUserId: string | null; createdAt: string;
+}
+```
 
-==================================================
-WHAT TO GENERATE
-==================================================
+---
 
-✅ Signal-first architecture  
-✅ PrimeNG-based UI  
-✅ Signal-driven forms  
-✅ Clean separation (UI / state / API)  
-✅ Strong typing everywhere
+## API Endpoints Quick Reference
 
-==================================================
-GENERATION ORDER
-==================================================
+### Auth — `/auth` (public unless marked 🔒)
 
-When generating code:
+| Method | Path | Body | Returns |
+|---|---|---|---|
+| `POST` | `/auth/register` | `{ email, password, firstName?, lastName?, displayName? }` | `{ user: SafeUser }` + message |
+| `POST` | `/auth/login` | `{ email, password }` | `{ user: SafeUser, tokens: TokenPair }` |
+| `POST` | `/auth/verify-email` | `{ token }` | `{ message }` |
+| `POST` | `/auth/refresh-token` | `{ refreshToken }` | `{ tokens: TokenPair }` |
+| `POST` | `/auth/logout` | `{ refreshToken }` | `{ message }` |
+| `GET` | `/auth/me` 🔒 | — | `{ user: SafeUser }` |
 
-1. Define types
-2. Create API/data-access layer
-3. Create signal store/service
-4. Build UI with PrimeNG + signals
-5. Use signal-based forms
-6. Keep everything clean, typed, and production-ready
+**Auth flow:** register → verify email (token from DB during dev) → login → store tokens → intercept 401 → refresh → retry.  
+Password rules: min 8 chars, 1 uppercase, 1 number.
 
-If anything is unclear, make a reasonable production-safe assumption and proceed.
+---
+
+### Organizations — `/organizations` 🔒
+
+| Method | Path | Permission | Body / Response |
+|---|---|---|---|
+| `POST` | `/organizations` | any auth user | `{ name, slug, description? }` → `{ organization: OrganizationSummary }` |
+| `GET` | `/organizations` | any auth user | `{ organizations: OrganizationSummary[] }` |
+| `GET` | `/organizations/:orgId/me` | active member | `{ organization, membership, effectivePermissions: string[] }` |
+| `POST` | `/organizations/:orgId/members` | `users.manage` | `{ email, roleCodes? }` → `{ member: MemberWithRoles }` |
+| `GET` | `/organizations/:orgId/members` | `users.manage` | `{ members: MemberWithRoles[] }` |
+| `POST` | `/organizations/:orgId/members/:membershipId/roles` | `users.manage` | `{ roleCodes: string[] }` → `{ assignedRoles: string[] }` |
+| `GET` | `/organizations/:orgId/members/:membershipId/permissions` | self OR `users.manage` | `{ membershipId, userId, organizationId, permissions: string[] }` |
+
+**Role codes:** `ORG_ADMIN` · `TRAINER` · `ATHLETE` · `VIEWER`  
+**Permission codes:** `users.manage` · `teams.manage` · `devices.manage` · `presets.manage` · `session.start` · `session.end` · `session.assign` · `session.delete` · `viewer.scope.manage`
+
+---
+
+### Devices — `/devices` 🔒
+
+| Method | Path | Notes |
+|---|---|---|
+| `POST` | `/devices/kits` | `{ organizationId, name, code, description?, maxPods? }` → `{ kit: DeviceKitSummary }` — requires `devices.manage` |
+| `GET` | `/devices/kits` | `{ kits: DeviceKitSummary[] }` — shows owned + shared + org kits |
+| `GET` | `/devices/kits/:kitId` | `{ kit: DeviceKitDetail }` — includes hub and pod count |
+| `POST` | `/devices/kits/:kitId/hub` | `{ hardwareUid, serialNumber?, firmwareVersion?, bluetoothName? }` → `{ hub: HubSummary }` — one hub per kit |
+| `POST` | `/devices/kits/:kitId/pods` | `{ pods: [...] }` → `{ pods: PodSummary[] }` — batch, all-or-nothing |
+| `GET` | `/devices/kits/:kitId/pods` | `{ pods: PodSummary[] }` |
+| `POST` | `/devices/kits/:kitId/access` | `{ userId, canOperate, canManage }` → `{ access: KitAccessGrant }` — upsert |
+| `GET` | `/devices/kits/:kitId/access` | `{ accessGrants: KitAccessGrant[] }` |
+| `POST` | `/devices/pods/:podId/reassign` | `{ targetDeviceKitId }` → `{ pod: PodSummary }` — requires manage on both kits |
+
+---
+
+### Sessions — `/sessions` 🔒
+
+| Method | Path | Notes |
+|---|---|---|
+| `POST` | `/sessions/sync` | Large body (see below). Idempotent on `(organizationId, clientSessionId)`. Returns 201 (new) or 200 (duplicate). |
+| `GET` | `/sessions` | `?organizationId&assignedToUserId?&teamId?&limit?&offset?` → `{ sessions: SessionSummary[] }` |
+| `GET` | `/sessions/:id` | `{ session: SessionDetail }` — includes events and active pods |
+| `PATCH` | `/sessions/:id/assign` | `{ assignedToUserId?, teamId? }` → `{ session: SessionSummary }` — requires `session.assign` |
+| `DELETE` | `/sessions/:id` | Soft delete. Idempotent. Requires `session.delete`. |
+
+**Sync body key fields:** `clientSessionId`, `organizationId`, `deviceKitId`, `origin`, `status`, `endMode`, `trainingMode`, `configJson`, `sessionStartedAt`, `sessionEndedAt`, `durationMs`, `hitCount`, `missCount` — plus optional `activePods[]` and `events[]`.
+
+---
+
+### Presets — `/presets` 🔒
+
+| Method | Path | Notes |
+|---|---|---|
+| `POST` | `/presets` | `{ scope, organizationId?, name, description?, configJson }` → `{ preset: PresetDetail }` |
+| `GET` | `/presets` | `?scope?&organizationId?&createdByUserId?` → `{ presets: PresetSummary[] }` |
+| `GET` | `/presets/:id` | `{ preset: PresetDetail }` |
+| `PATCH` | `/presets/:id` | `{ name?, description?, configJson? }` — at least one field required |
+| `DELETE` | `/presets/:id` | Soft delete. Idempotent. |
+
+---
+
+### Teams — `/teams` 🔒
+
+| Method | Path | Notes |
+|---|---|---|
+| `POST` | `/teams` | `{ organizationId, name, description? }` → `{ team: TeamDetail }` — requires `teams.manage` |
+| `GET` | `/teams` | `?organizationId?` → `{ teams: TeamSummary[] }` |
+| `GET` | `/teams/:id` | `{ team: TeamDetail }` |
+| `POST` | `/teams/:id/members` | `{ userId }` → `{ members: TeamMemberSummary[] }` — user must be active org member |
+| `GET` | `/teams/:id/members` | `{ members: TeamMemberSummary[] }` |
+| `DELETE` | `/teams/:teamId/members/:userId` | Idempotent. Requires `teams.manage`. |
+
+---
+
+### Viewer Scopes — `/viewer-scopes` 🔒
+
+> Only user-level visibility is supported (`viewerUserId → targetUserId`). Team-scoped visibility is not implemented.
+
+| Method | Path | Notes |
+|---|---|---|
+| `POST` | `/viewer-scopes` | `{ organizationId, viewerUserId, targetUserId }` → `{ scope: ViewerScopeSummary }` — requires `viewer.scope.manage` |
+| `GET` | `/viewer-scopes` | `?organizationId&viewerUserId?` → `{ scopes: ViewerScopeSummary[] }` |
+| `DELETE` | `/viewer-scopes/:scopeId` | Idempotent. Requires `viewer.scope.manage`. |
+
+---
+
+### Health
+
+`GET /health` — public. Returns `{ status: "ok", timestamp: string }`.
+
+---
+
+## Error Handling
+
+| Status | Meaning | Angular action |
+|---|---|---|
+| 400 | Validation failed — `errors` object has field-level messages | Show field errors from `error.errors` |
+| 401 | Bad/expired token | Interceptor: refresh → retry → redirect to login |
+| 403 | Authenticated but not allowed (inactive, unverified, no permission) | Show access-denied UI, do not retry |
+| 404 | Resource not found | Show not-found state |
+| 409 | Duplicate resource | Show conflict message from `error.message` |
+| 500 | Unexpected server error | Show generic error, log locally |
+
+> `403` on login = account deactivated OR email unverified — check `error.message` to differentiate.
+
+---
+
+## Email Verification (Dev Only)
+
+Email delivery is not implemented. To get the verification token during development, query the database directly:
+
+```sql
+SELECT token FROM app.email_verification_tokens
+WHERE user_id = '<userId>' AND used_at IS NULL
+ORDER BY created_at DESC;
+```
+
+Then `POST /auth/verify-email` with `{ token }`.
+
