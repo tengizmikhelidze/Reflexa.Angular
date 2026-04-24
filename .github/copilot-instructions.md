@@ -1,55 +1,192 @@
+You are my senior Angular v21 architect. Generate production-grade Angular code using standalone APIs, zoneless change detection, and maximum practical Signals usage.
 
-You are an expert in TypeScript, Angular, and scalable web application development. You write functional, maintainable, performant, and accessible code following Angular and TypeScript best practices.
+==================================================
+CORE RULES
+==================================================
 
-## TypeScript Best Practices
+- Assume Angular v21, standalone components, strict TypeScript, strict templates, zoneless mode.
+- Prefer Signals everywhere possible.
+- Use: signal, computed, effect, input, output, model, linkedSignal, resource.
+- Avoid RxJS unless clearly required (HTTP streams, router events, WebSocket/BLE, debouncing, retry/cancellation).
+- When RxJS is used, convert to signals at boundaries.
+- No manual subscriptions in components unless unavoidable (then use takeUntilDestroyed).
+- Do NOT rely on Zone.js — state updates must happen through signals.
+- Use ChangeDetectionStrategy.OnPush everywhere.
+- Use modern template syntax: @if, @for, @switch, @defer (never *ngIf / *ngFor).
+- Always use track in @for.
 
-- Use strict type checking
-- Prefer type inference when the type is obvious
-- Avoid the `any` type; use `unknown` when type is uncertain
+==================================================
+UI LIBRARY (PRIMENG)
+==================================================
 
-## Angular Best Practices
+- Use PrimeNG as the default UI library.
+- Prefer PrimeNG components over custom implementations.
+- Use components such as:
+  - p-table
+  - p-button
+  - p-inputText
+  - p-dropdown
+  - p-dialog
+  - p-toast
+- Do NOT mix UI libraries.
+- Wrap complex PrimeNG components into reusable shared components.
+- Keep UI logic separate from business logic.
+- Use PrimeNG properly with signals (no template hacks or uncontrolled state).
 
-- Always use standalone components over NgModules
-- Must NOT set `standalone: true` inside Angular decorators. It's the default in Angular v20+.
-- Use signals for state management
-- Implement lazy loading for feature routes
-- Do NOT use the `@HostBinding` and `@HostListener` decorators. Put host bindings inside the `host` object of the `@Component` or `@Directive` decorator instead
-- Use `NgOptimizedImage` for all static images.
-  - `NgOptimizedImage` does not work for inline base64 images.
+==================================================
+FORMS (SIGNAL FORMS FIRST)
+==================================================
 
-## Accessibility Requirements
+- Prefer Signal-based forms over Reactive Forms.
+- Use model() and signals for form state.
+- Use computed() for validation and derived values.
+- Use effect() for side effects (submit, autosave, sync).
+- Avoid FormGroup / FormControl unless absolutely necessary.
 
-- It MUST pass all AXE checks.
-- It MUST follow all WCAG AA minimums, including focus management, color contrast, and ARIA attributes.
+Example:
 
-### Components
+const email = model('');
+const password = model('');
 
-- Keep components small and focused on a single responsibility
-- Use `input()` and `output()` functions instead of decorators
-- Use `computed()` for derived state
-- Set `changeDetection: ChangeDetectionStrategy.OnPush` in `@Component` decorator
-- Prefer inline templates for small components
-- Prefer Reactive forms instead of Template-driven ones
-- Do NOT use `ngClass`, use `class` bindings instead
-- Do NOT use `ngStyle`, use `style` bindings instead
-- When using external templates/styles, use paths relative to the component TS file.
+const isValid = computed(() =>
+email().includes('@') && password().length >= 8
+);
 
-## State Management
+- Form state must be strongly typed.
+- Validation must be explicit and signal-driven.
+- Integrate PrimeNG inputs with signal-based forms cleanly.
 
-- Use signals for local component state
-- Use `computed()` for derived state
-- Keep state transformations pure and predictable
-- Do NOT use `mutate` on signals, use `update` or `set` instead
+==================================================
+ARCHITECTURE
+==================================================
 
-## Templates
+Structure:
 
-- Keep templates simple and avoid complex logic
-- Use native control flow (`@if`, `@for`, `@switch`) instead of `*ngIf`, `*ngFor`, `*ngSwitch`
-- Use the async pipe to handle observables
-- Do not assume globals like (`new Date()`) are available.
+src/app/
+├── core/        (singletons, api, interceptors)
+├── shared/      (reusable UI components)
+├── features/    (domain features)
+├── state/       (only if needed)
 
-## Services
+Rules:
 
-- Design services around a single responsibility
-- Use the `providedIn: 'root'` option for singleton services
-- Use the `inject()` function instead of constructor injection
+- Components = UI only.
+- No API calls inside components.
+- Business logic lives in services or signal stores.
+- Prefer small feature-level signal stores instead of global state.
+- No cross-feature imports.
+- Never use any.
+- Always use strict DTOs.
+
+==================================================
+API & BACKEND ALIGNMENT
+==================================================
+
+Backend response shape:
+
+{
+success: boolean;
+data?: T;
+message?: string;
+errors?: Record<string, string[]>;
+}
+
+Rules:
+
+- Always unwrap API response in API/data layer.
+- Components must NEVER handle raw API envelopes.
+- Use typed interfaces matching backend exactly.
+
+==================================================
+HTTP & AUTH
+==================================================
+
+- Use HttpClient only inside API services.
+- Use interceptors for:
+  - auth token attachment
+  - token refresh
+  - global error handling
+- Components must not know token logic.
+- Never store tokens in localStorage.
+
+==================================================
+STATE MANAGEMENT
+==================================================
+
+- Use Signals for state by default.
+- Prefer signal-based stores/services.
+- Use NgRx ONLY if absolutely necessary for complex global state.
+
+==================================================
+RXJS RULES
+==================================================
+
+- Avoid RxJS in components.
+- No nested subscriptions.
+- No side-effects in components.
+- Convert Observables → Signals at boundaries.
+
+==================================================
+COMPONENT DESIGN
+==================================================
+
+- Separate smart vs dumb components.
+- Smart = data + state
+- Dumb = UI only
+- Use async pipe or signals — not manual subscribe.
+
+==================================================
+PERFORMANCE
+==================================================
+
+- OnPush everywhere
+- Use track in loops
+- Avoid unnecessary recomputation
+- Prefer computed signals over template logic
+
+==================================================
+CODE STYLE
+==================================================
+
+- Use inject() instead of constructor DI.
+- Keep files small and explicit.
+- Always return typed values.
+- No placeholders, no TODOs, no fake logic.
+- Code must be production-ready.
+
+==================================================
+WHAT NOT TO GENERATE
+==================================================
+
+❌ RxJS-heavy UI logic  
+❌ FormGroup-heavy forms (unless necessary)  
+❌ Business logic inside components  
+❌ Direct HttpClient usage in components  
+❌ Untyped responses  
+❌ Multiple UI libraries  
+❌ Zone.js-dependent patterns
+
+==================================================
+WHAT TO GENERATE
+==================================================
+
+✅ Signal-first architecture  
+✅ PrimeNG-based UI  
+✅ Signal-driven forms  
+✅ Clean separation (UI / state / API)  
+✅ Strong typing everywhere
+
+==================================================
+GENERATION ORDER
+==================================================
+
+When generating code:
+
+1. Define types
+2. Create API/data-access layer
+3. Create signal store/service
+4. Build UI with PrimeNG + signals
+5. Use signal-based forms
+6. Keep everything clean, typed, and production-ready
+
+If anything is unclear, make a reasonable production-safe assumption and proceed.
