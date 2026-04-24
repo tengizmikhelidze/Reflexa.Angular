@@ -1,7 +1,7 @@
 ﻿import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { AuthStore } from '../../../features/auth/auth.store';
+import { AuthStore } from '../../../features/auth/data-access/auth.store';
 import { OrganizationsStore } from '../../../features/organizations/organizations.store';
 @Component({
   selector: 'app-sidebar',

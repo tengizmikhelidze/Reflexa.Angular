@@ -16,3 +16,11 @@ export type {
 export interface RefreshTokenResponse {
   tokens: TokenPair;
 }
+
+export interface ResendVerificationEmailRequest {
+  email: string;
+}
+
+export interface ResendVerificationEmailResponse {
+  message: string;
+}

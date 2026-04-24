@@ -1,7 +1,7 @@
 ﻿import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { SelectModule } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
-import { AuthStore } from '../../../features/auth/auth.store';
+import { AuthStore } from '../../../features/auth/data-access/auth.store';
 import { OrganizationsStore } from '../../../features/organizations/organizations.store';
 import { OrganizationSummary } from '../../models/organization.models';
 @Component({

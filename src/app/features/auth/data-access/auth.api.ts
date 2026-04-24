@@ -9,6 +9,8 @@ import type {
   RefreshTokenResponse,
   RegisterRequest,
   RegisterResponse,
+  ResendVerificationEmailRequest,
+  ResendVerificationEmailResponse,
   VerifyEmailRequest,
 } from './auth.types';
 
@@ -38,5 +40,14 @@ export class AuthApi {
 
   me(): Promise<MeResponse> {
     return this.api.get<MeResponse>('/auth/me');
+  }
+
+  resendVerificationEmail(
+    body: ResendVerificationEmailRequest,
+  ): Promise<ResendVerificationEmailResponse> {
+    return this.api.post<ResendVerificationEmailRequest, ResendVerificationEmailResponse>(
+      '/auth/resend-verification',
+      body,
+    );
   }
 }
