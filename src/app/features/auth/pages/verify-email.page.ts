@@ -48,8 +48,7 @@ import { AuthStore } from '../data-access/auth.store';
               (onClick)="verify()" styleClass="w-full" />
           </div>
 
-          @if (store.error()) {
-            <div style="border-top:1px solid var(--p-surface-200);padding-top:1rem;margin-top:0.25rem">
+          <div style="border-top:1px solid var(--p-surface-200);padding-top:1rem;margin-top:0.25rem">
               <p style="font-size:0.875rem;color:var(--p-surface-600);margin:0 0 0.75rem">
                 Didn't receive an email or token expired?
               </p>
@@ -79,7 +78,6 @@ import { AuthStore } from '../data-access/auth.store';
                 [loading]="store.resendLoading()" [disabled]="store.resendLoading()"
                 (onClick)="resend()" styleClass="w-full" />
             </div>
-          }
 
           <p style="text-align:center;font-size:0.875rem;margin-top:1rem">
             <a routerLink="/login">Back to Login</a>
