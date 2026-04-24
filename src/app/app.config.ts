@@ -28,7 +28,7 @@ export const appConfig: ApplicationConfig = {
     ),
     provideHttpClient(
       withFetch(),
-      withInterceptors([authInterceptor])
+      withInterceptors([errorInterceptor, authInterceptor])
     ),
     providePrimeNG({
       theme: {
