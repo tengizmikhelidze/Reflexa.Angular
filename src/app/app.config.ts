@@ -12,6 +12,7 @@ import Aura from '@primeng/themes/aura';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { APP_CONFIG } from './core/config/app-config';
 import { environment } from '../environments/environment';
 
