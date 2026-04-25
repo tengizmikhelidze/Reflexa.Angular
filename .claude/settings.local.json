@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(npx ng *)",
-      "Bash(grep -E \"^\\\\-|\\\\.ts$\")"
+      "Bash(grep -E \"^\\\\-|\\\\.ts$\")",
+      "Bash(mkdir -p \"A:/P/Reflexa/Reflexa.Angular/src/app/features/organizations/data-access\")",
+      "Bash(mkdir -p \"A:/P/Reflexa/Reflexa.Angular/src/app/features/organizations/components\")",
+      "Bash(mkdir -p \"A:/P/Reflexa/Reflexa.Angular/src/app/features/organizations/pages\")",
+      "Bash(pnpm build *)"
     ]
   }
 }

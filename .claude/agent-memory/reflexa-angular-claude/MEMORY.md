@@ -1,0 +1,1 @@
+- [Organizations feature structure](project_organizations_feature.md) — layout of data-access, components, pages, routes after the full feature build

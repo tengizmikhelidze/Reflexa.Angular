@@ -33,19 +33,10 @@ export const routes: Routes = [
       },
       {
         path: 'organizations',
-        loadComponent: () =>
-          import(
-            './features/organizations/pages/organization-list/organization-list.component'
-          ).then((m) => m.OrganizationListComponent),
-      },
-      {
-        path: 'organizations/:orgId/members',
-        canActivate: [organizationSelectedGuard, permissionGuard],
-        data: { permission: 'users.manage' },
-        loadComponent: () =>
-          import(
-            './features/organizations/pages/organization-members/organization-members.component'
-          ).then((m) => m.OrganizationMembersComponent),
+        loadChildren: () =>
+          import('./features/organizations/organizations.routes').then(
+            (m) => m.ORGANIZATIONS_ROUTES,
+          ),
       },
 
       // Devices

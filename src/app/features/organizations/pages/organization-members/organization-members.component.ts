@@ -90,7 +90,7 @@ export class OrganizationMembersComponent implements OnInit {
   protected showRoleEdit = false;
   protected addEmail = '';
   protected editingMember = signal<MemberWithRoles | null>(null);
-  protected editingRoles: string[] = [];
+  protected editingRoles: RoleCode[] = [];
   protected readonly roleOptions = [
     { label: 'Org Admin', value: 'ORG_ADMIN' },
     { label: 'Trainer', value: 'TRAINER' },
@@ -107,7 +107,7 @@ export class OrganizationMembersComponent implements OnInit {
   }
   editRoles(member: MemberWithRoles): void {
     this.editingMember.set(member);
-    this.editingRoles = [...member.roles];
+    this.editingRoles = [...member.roles] as RoleCode[];
     this.showRoleEdit = true;
   }
   async addMember(): Promise<void> {
