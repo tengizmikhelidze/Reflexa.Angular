@@ -42,19 +42,8 @@ export const routes: Routes = [
       // Devices
       {
         path: 'devices',
-        canActivate: [organizationSelectedGuard],
-        loadComponent: () =>
-          import('./features/devices/pages/device-list/device-list.component').then(
-            (m) => m.DeviceListComponent
-          ),
-      },
-      {
-        path: 'devices/:kitId',
-        canActivate: [organizationSelectedGuard],
-        loadComponent: () =>
-          import(
-            './features/devices/pages/device-detail/device-detail.component'
-          ).then((m) => m.DeviceDetailComponent),
+        loadChildren: () =>
+          import('./features/devices/devices.routes').then((m) => m.DEVICES_ROUTES),
       },
 
       // Sessions

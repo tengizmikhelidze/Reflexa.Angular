@@ -1,1 +1,2 @@
 - [Organizations feature structure](project_organizations_feature.md) — layout of data-access, components, pages, routes after the full feature build
+- [Devices feature structure](project_devices_feature.md) — data-access, components, pages, routes after STEP 7 build; old pages orphaned but still compile via barrel

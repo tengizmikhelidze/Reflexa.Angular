@@ -72,8 +72,8 @@ import { PermissionBadgesComponent } from '../components/permission-badges.compo
         gap: 1rem;
       }
       .access-card {
-        background: var(--p-surface-0);
-        border: 1px solid var(--p-surface-200);
+        background: var(--app-surface);
+        border: 1px solid var(--app-border);
         border-radius: 8px;
         padding: 1.25rem;
       }
@@ -81,6 +81,7 @@ import { PermissionBadgesComponent } from '../components/permission-badges.compo
         margin: 0 0 1rem 0;
         font-size: 1rem;
         font-weight: 600;
+        color: var(--app-text);
       }
       .field-row {
         display: flex;
@@ -91,7 +92,7 @@ import { PermissionBadgesComponent } from '../components/permission-badges.compo
       .label {
         min-width: 80px;
         font-size: 0.875rem;
-        color: var(--p-surface-500);
+        color: var(--app-muted);
       }
     `,
   ],

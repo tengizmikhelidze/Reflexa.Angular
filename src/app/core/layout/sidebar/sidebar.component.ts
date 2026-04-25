@@ -57,15 +57,15 @@ import { OrganizationsStore } from '../../../features/organizations/organization
   `,
   styles: [`
     :host { display: flex; flex-direction: column; height: 100%; }
-    .sidebar-header { padding: 1.25rem 1rem; border-bottom: 1px solid var(--p-surface-200); }
+    .sidebar-header { padding: 1.25rem 1rem; border-bottom: 1px solid var(--app-border); }
     .sidebar-brand { display: flex; align-items: center; gap: 0.5rem; }
     .sidebar-logo { font-size: 1.5rem; }
     .sidebar-title { font-size: 1.1rem; font-weight: 700; color: var(--p-primary-500); }
     .sidebar-nav { flex: 1; padding: 0.75rem 0; }
-    .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 1rem; color: var(--p-surface-700); text-decoration: none; font-size: 0.9rem; border-radius: 6px; margin: 2px 8px; transition: background 0.2s; }
-    .nav-item:hover { background: var(--p-surface-100); }
+    .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 1rem; color: var(--app-muted); text-decoration: none; font-size: 0.9rem; border-radius: 6px; margin: 2px 8px; transition: background 0.2s, color 0.2s; }
+    .nav-item:hover { background: var(--app-border); color: var(--app-text); }
     .nav-item.active { background: var(--p-primary-50); color: var(--p-primary-600); font-weight: 600; }
-    .sidebar-footer { padding: 0.75rem 1rem; border-top: 1px solid var(--p-surface-200); }
+    .sidebar-footer { padding: 0.75rem 1rem; border-top: 1px solid var(--app-border); }
   `]
 })
 export class SidebarComponent {

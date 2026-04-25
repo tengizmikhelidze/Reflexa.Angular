@@ -39,7 +39,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
             <p><b>Firmware:</b> {{ hub.firmwareVersion ?? '—' }}</p>
             <p-tag [value]="hub.isActive ? 'Active' : 'Inactive'" [severity]="hub.isActive ? 'success' : 'danger'" />
           } @else {
-            <p style="color:var(--p-surface-500)">No hub registered</p>
+            <p style="color:var(--app-muted)">No hub registered</p>
             @if (orgStore.canManageDevices()) {
               <p-button label="Register Hub" size="small" (onClick)="showRegisterHub = true" />
             }

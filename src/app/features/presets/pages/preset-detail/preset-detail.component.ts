@@ -12,7 +12,7 @@ import { ButtonModule } from 'primeng/button';
       <h2>Preset Detail</h2>
       <p-button label="Back to Presets" icon="pi pi-arrow-left" severity="secondary" [text]="true" routerLink="/presets" />
     </div>
-    <p style="color: var(--p-surface-500)">Preset detail coming soon.</p>
+    <p style="color: var(--app-muted)">Preset detail coming soon.</p>
   `
 })
 export class PresetDetailComponent {}

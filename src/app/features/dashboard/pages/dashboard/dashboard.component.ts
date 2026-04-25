@@ -8,7 +8,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
     <div class="page-header">
       <h2>Dashboard</h2>
     </div>
-    <p style="color: var(--p-surface-500)">Welcome to Reflexa. Select an organization to get started.</p>
+    <p style="color: var(--app-muted)">Welcome to Reflexa. Select an organization to get started.</p>
   `
 })
 export class DashboardComponent {}

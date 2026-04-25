@@ -19,7 +19,7 @@ import { AuthStore } from '../data-access/auth.store';
         <ng-template #header>
           <div style="text-align:center;padding:1.5rem 1.5rem 0">
             <h2 style="margin:0">Welcome back</h2>
-            <p style="color:var(--p-surface-500);margin-top:0.5rem">Sign in to Reflexa</p>
+            <p style="color:var(--app-muted);margin-top:0.5rem">Sign in to Reflexa</p>
           </div>
         </ng-template>
 
@@ -61,7 +61,7 @@ import { AuthStore } from '../data-access/auth.store';
         </div>
 
         @if (showResendSection()) {
-          <div style="border-top:1px solid var(--p-surface-200);padding-top:1rem;margin-top:0.5rem">
+          <div style="border-top:1px solid var(--app-border);padding-top:1rem;margin-top:0.5rem">
             <p style="font-size:0.875rem;color:var(--p-surface-600);margin:0 0 0.75rem">
               Resend verification email
             </p>

@@ -33,27 +33,27 @@ import { DecimalPipe } from '@angular/common';
       }
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem">
         <p-card>
-          <p style="color:var(--p-surface-500);font-size:0.8rem">STATUS</p>
+          <p style="color:var(--app-muted);font-size:0.8rem">STATUS</p>
           <p-tag [value]="session.status" [severity]="statusSeverity(session.status)" />
         </p-card>
         <p-card>
-          <p style="color:var(--p-surface-500);font-size:0.8rem">HITS / MISSES</p>
+          <p style="color:var(--app-muted);font-size:0.8rem">HITS / MISSES</p>
           <p style="font-size:1.5rem;font-weight:600">{{ session.hitCount }} / {{ session.missCount }}</p>
         </p-card>
         <p-card>
-          <p style="color:var(--p-surface-500);font-size:0.8rem">ACCURACY</p>
+          <p style="color:var(--app-muted);font-size:0.8rem">ACCURACY</p>
           <p style="font-size:1.5rem;font-weight:600">{{ session.accuracyPercent !== null ? (session.accuracyPercent | number:'1.1-1') + '%' : '—' }}</p>
         </p-card>
         <p-card>
-          <p style="color:var(--p-surface-500);font-size:0.8rem">AVG REACTION</p>
+          <p style="color:var(--app-muted);font-size:0.8rem">AVG REACTION</p>
           <p style="font-size:1.5rem;font-weight:600">{{ session.avgReactionMs !== null ? session.avgReactionMs + 'ms' : '—' }}</p>
         </p-card>
         <p-card>
-          <p style="color:var(--p-surface-500);font-size:0.8rem">BEST REACTION</p>
+          <p style="color:var(--app-muted);font-size:0.8rem">BEST REACTION</p>
           <p style="font-size:1.5rem;font-weight:600">{{ session.bestReactionMs !== null ? session.bestReactionMs + 'ms' : '—' }}</p>
         </p-card>
         <p-card>
-          <p style="color:var(--p-surface-500);font-size:0.8rem">SCORE</p>
+          <p style="color:var(--app-muted);font-size:0.8rem">SCORE</p>
           <p style="font-size:1.5rem;font-weight:600">{{ session.score ?? '—' }}</p>
         </p-card>
       </div>

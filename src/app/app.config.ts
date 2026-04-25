@@ -1,8 +1,10 @@
 import {
+  APP_INITIALIZER,
   ApplicationConfig,
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
 } from '@angular/core';
+import { ThemeStore } from './core/theme/theme.store';
 import { provideRouter, withComponentInputBinding, withRouterConfig } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
@@ -33,12 +35,18 @@ export const appConfig: ApplicationConfig = {
     providePrimeNG({
       theme: {
         preset: Aura,
-        options: { darkModeSelector: '.dark-mode' },
+        options: { darkModeSelector: '.app-dark' },
       },
       ripple: true,
     }),
     MessageService,
     ConfirmationService,
+    {
+      provide: APP_INITIALIZER,
+      useFactory: (themeStore: ThemeStore) => () => themeStore.loadFromStorage(),
+      deps: [ThemeStore],
+      multi: true,
+    },
     {
       provide: APP_CONFIG,
       useValue: { apiBaseUrl: environment.apiBaseUrl } satisfies { apiBaseUrl: string },
